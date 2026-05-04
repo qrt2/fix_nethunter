@@ -1,10 +1,15 @@
 # NetHunter DPKG Fixer
 
-Este script foi desenvolvido para resolver erros críticos de dependências e configuração de pacotes (como `systemd`, `udev` e `libselinux1`) em ambientes **Kali NetHunter (chroot/proot)** rodando sobre o Android.
+Se você está usando o NetHunter 2026 (especialmente a versão Full/Desktop) e o seu apt upgrade ou apt install travou com erros de **"post-installation script"**, este script é a solução.
+​Ele corrige travamentos causados por:
+​Novas funções de `Systemd`: O Kali moderno tenta ativar serviços que o Kernel do Android não suporta.
+​Conflitos de Desktop: Erros em pacotes como polkitd, network-manager, orca e pkexec.
+**​Protocol driver not attached:** Mata o loop infinito do dpkg tentando configurar o que o Android bloqueia.
+​**Machine-ID & D-Bus:** Gera identificadores válidos para evitar falhas em ferramentas gráficas e de rede.
 
-## O Problema
+## ​Por que usar?
 
-O Kali NetHunter compartilha o Kernel do Android, que não possui suporte a drivers de protocolo exigidos pelo `systemd` moderno (erro: *Protocol driver not attached*). Isso causa um travamento no `dpkg`, impedindo instalações e atualizações via `apt`.
+​As atualizações recentes do Kali inseriram verificações de hardware mais rigorosas. Como o chroot compartilha o Kernel do Android, o dpkg quebra ao tentar acessar drivers de protocolo inexistentes. Este script realiza uma "cirurgia" no banco de dados (/var/lib/dpkg/status) usando AWK para forçar o estado de instalação e neutralizar os gatilhos que travam o seu terminal.
 
 ## O que este script faz?
 
@@ -16,10 +21,18 @@ O Kali NetHunter compartilha o Kernel do Android, que não possui suporte a driv
 
 **Environment Cleanup:** Limpa o cache do APT e atualiza os repositórios.
 
+**Reverter Alterações**
+Caso precise restaurar o banco de dados original do dpkg:
+
+```bash
+cp /var/lib/dpkg/status.bak /var/lib/dpkg/status
+```
+
 > [!CAUTION]
 > ### **AVISO LEGAL E DE SEGURANÇA**
 > **ESTE SCRIPT FOI CRIADO EXCLUSIVAMENTE PARA AMBIENTES MOBILE (NETHUNTER/TERMUX).**
-> Não execute este script em uma instalação nativa de desktop (PC/Laptop). Ele desativa componentes críticos do `systemd` que são necessários para o boot e funcionamento de hardware real. Use por sua conta e risco
+> Não execute este script em uma instalação nativa de desktop (PC/Laptop). Ele desativa componentes críticos do `systemd` que são necessários para o boot e funcionamento de hardware real.
+> Este script realiza modificações diretas no banco de dados do DPKG. Embora um backup seja criado, use com cautela em ambientes de produção."
 
 Desenvolvido por:[![Telegram](https://img.shields.io/badge/Telegram-Contact-blue?style=for-the-badge&logo=telegram)](https://t.me/cybe4)
 
