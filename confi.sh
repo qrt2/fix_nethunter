@@ -1,0 +1,52 @@
+#!/bin/bash
+
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo -e "${BLUE}[*] Iniciando reparo do ambiente NetHunter...${NC}"
+
+# Preparação (Onde entram o systemctl e dbus)
+echo -e "${BLUE}[*] Neutralizando systemd e configurando machine-id...${NC}"
+dbus-uuidgen > /etc/machine-id 2>/dev/null
+ln -sf /bin/true /usr/bin/systemctl
+
+# Neutralização de Scripts
+cd /var/lib/dpkg/info/
+bad_pkgs=("systemd" "udev" "libselinux1" "openssh-server" "openssh-client" "dhcpcd-base" "cron-daemon-common")
+
+for pkg in "${bad_pkgs[@]}"; do
+    if [ -f "$pkg.postinst" ]; then
+        echo -e "${RED}[!] Neutralizando: $pkg.postinst${NC}"
+        echo '#!/bin/sh' > "$pkg.postinst"
+        chmod +x "$pkg.postinst"
+    fi
+done
+
+# Cirurgia AWK no Banco de Dados 
+echo -e "${BLUE}[*] Ajustando banco de dados dpkg...${NC}"
+cd /var/lib/dpkg/
+cp status status.bak
+
+fix_status=("systemd" "systemd-sysv" "udev" "libselinux1")
+for pkg in "${fix_status[@]}"; do
+    echo -e "${GREEN}[+] Aplicando patch via AWK: $pkg${NC}"
+    awk -v p="$pkg" '
+    BEGIN { target="Package: " p }
+    $0 == target { f=1 }
+    f && /^Status:/ { print "Status: install ok installed"; next }
+    f && /^Config-Version:/ { next }
+    f && /^$/ { f=0 }
+    { print }' status > status.tmp && mv status.tmp status
+done
+
+#  Configuração e Limpeza
+echo -e "${BLUE}[*] Destravando o dpkg e limpando cache...${NC}"
+export DEBIAN_FRONTEND=noninteractive
+dpkg --configure -a --force-confnew
+
+apt-get clean
+apt-get update
+
+echo -e "${GREEN}[√] Pronto! Sistema destravado e atualizado.${NC}"
