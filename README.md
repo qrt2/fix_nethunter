@@ -31,3 +31,25 @@ Clone o repositório e execute o script com privilégios de root dentro do seu t
 ```bash
 curl -skL https://raw.githubusercontent.com/qrt2/fix_nethunter/main/fix_nethunter.sh | bash
 ```
+## Via BusyBox (Ideal para NetHunter Minimal)
+Se o seu sistema está "limpo" e não possui curl ou wget nativos, o busybox (que sempre vem no NetHunter) resolve:
+
+```bash
+busybox wget --no-check-certificate -O- https://raw.githubusercontent.com/qrt2/fix_nethunter/main/fix_nethunter | bash
+```
+## Via Método Manual (Cat) - Em caso de falha de rede
+Se você prefere ver o código antes ou se os comandos acima falharem, siga estes passos:
+
+Acesse o código fonte bruto (RAW) aqui: * **[Clique aqui para Visualizar o Script RAW](https://raw.githubusercontent.com/qrt2/fix_nethunter/main/fix_nethunter)**
+
+
+Copie todo o código da página
+No seu terminal NetHunter, digite:
+
+`cat > fix.sh`
+
+Cole o código, pressione Enter para garantir uma linha em branco e depois Ctrl + D para salvar
+
+```bash
+chmod +x fix.sh && ./fix.sh
+```
