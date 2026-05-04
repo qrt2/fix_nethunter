@@ -13,14 +13,14 @@ dbus-uuidgen > /etc/machine-id 2>/dev/null
 ln -sf /bin/true /usr/bin/systemctl
 
 # Neutralização de Scripts
-cd /var/lib/dpkg/info/
 bad_pkgs=("systemd" "udev" "libselinux1" "openssh-server" "openssh-client" "dhcpcd-base" "cron-daemon-common")
 
 for pkg in "${bad_pkgs[@]}"; do
-    if [ -f "$pkg.postinst" ]; then
-        echo -e "${RED}[!] Neutralizando: $pkg.postinst${NC}"
-        echo '#!/bin/sh' > "$pkg.postinst"
-        chmod +x "$pkg.postinst"
+    FILE="/var/lib/dpkg/info/$pkg.postinst"
+    if [ -f "$FILE" ]; then
+        echo -e "${RED}[!] Neutralizando: $FILE${NC}"
+        echo '#!/bin/sh' > "$FILE"
+        chmod +x "$FILE"
     fi
 done
 
