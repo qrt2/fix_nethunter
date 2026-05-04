@@ -26,7 +26,7 @@ ln -sf /bin/true /usr/bin/systemctl
 }
 confi() {
 # Pega a lista de pacotes travados
-broken_pkgs=($(dpkg -l | grep '^iU' | awk '{print $2}'))
+broken_pkgs=($(dpkg -l | grep -E '^[a-z][U|F|t|H]' | awk '{print $2}'))
 
 if [ ${#broken_pkgs[@]} -eq 0 ]; then
         echo -e "${YELLOW}[+] Nenhum pacote quebrado encontrado..${NC}"
