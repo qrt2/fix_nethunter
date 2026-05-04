@@ -15,8 +15,8 @@ Se você está usando o NetHunter 2026 (especialmente a versão Full/Desktop) e 
 
 ​As atualizações recentes do Kali inseriram verificações de hardware mais rigorosas. Como o chroot compartilha o Kernel do Android, o dpkg quebra ao tentar acessar drivers de protocolo inexistentes. Este script realiza uma "cirurgia" no banco de dados (/var/lib/dpkg/status) usando AWK para forçar o estado de instalação e neutralizar os gatilhos que travam o seu terminal.
 
-[!IMPORTANT]
-Aviso: Esta é uma solução temporária para contornar limitações atuais do ambiente chroot no Android. espero que os desenvolvedores achem um solução mais eficiente!
+**[!IMPORTANT]**
+## Aviso: *Esta é uma solução temporária para contornar limitações atuais do ambiente chroot no Android. espero que os desenvolvedores achem um solução mais eficiente!*
 
 ## O que este script faz?
 
