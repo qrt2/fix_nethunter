@@ -1,46 +1,56 @@
 #!/bin/bash
 
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${BLUE}[*] Iniciando reparo do ambiente NetHunter...${NC}"
+STATUS_FILE="/var/lib/dpkg/status"
+BACKUP_FILE="${STATUS_FILE}.bak"
 
-# Preparação (Onde entram o systemctl e dbus)
+backup() {
+# Verifica se já existe um backup. Se não existir, cria o primeiro.
+if [ ! -f "$BACKUP_FILE" ]; then
+    echo -e "${BLUE}[+] Criando backup inicial do banco de dados dpkg...${NC}"
+    cp "$STATUS_FILE" "$BACKUP_FILE"
+else
+    echo -e "${YELLOW}[!] Backup anterior detectado. Criando cópia de segurança da sessão...${NC}"
+    cp "$STATUS_FILE" "${STATUS_FILE}.tmp_bak"
+fi
+}
+_system() {
 echo -e "${BLUE}[*] Neutralizando systemd e configurando machine-id...${NC}"
 dbus-uuidgen > /etc/machine-id 2>/dev/null
 ln -sf /bin/true /usr/bin/systemctl
+}
+confi() {
+# Pega a lista de pacotes travados
+broken_pkgs=($(dpkg -l | grep '^iU' | awk '{print $2}'))
 
-# Neutralização de Scripts
-bad_pkgs=("bluez" "bluetooth" "blueranger" "bluelog" "spooftooph" "systemd" "udev" "libselinux1" "openssh-server" "openssh-client" "dhcpcd-base" "cron-daemon-common")
-
-for pkg in "${bad_pkgs[@]}"; do
+if [ ${#broken_pkgs[@]} -eq 0 ]; then
+        echo -e "${YELLOW}[+] Nenhum pacote quebrado encontrado..${NC}"
+        return
+    fi
+echo -e "${BLUE}[*] Ajustando banco de dados dpkg...${NC}"
+for pkg in "${broken_pkgs[@]}"; do
     FILE="/var/lib/dpkg/info/$pkg.postinst"
     if [ -f "$FILE" ]; then
         echo -e "${RED}[!] Neutralizando: $FILE${NC}"
-        echo '#!/bin/sh' > "$FILE"
+        echo -e "#!/bin/sh\nexit 0" > "$FILE"
         chmod +x "$FILE"
-    fi
-done
+    fi 
 
-# Cirurgia AWK no Banco de Dados 
-echo -e "${BLUE}[*] Ajustando banco de dados dpkg...${NC}"
-cd /var/lib/dpkg/
-cp status status.bak
-
-fix_status=("systemd" "systemd-sysv" "udev" "libselinux1")
-for pkg in "${fix_status[@]}"; do
     echo -e "${GREEN}[+] Aplicando patch via AWK: $pkg${NC}"
     awk -v p="$pkg" '
     BEGIN { target="Package: " p }
-    $0 == target { f=1 }
+    $0 ~ "^" target "(:| )" || $0 == target { f=1 }
     f && /^Status:/ { print "Status: install ok installed"; next }
-    f && /^Config-Version:/ { next }
     f && /^$/ { f=0 }
-    { print }' status > status.tmp && mv status.tmp status
+    { print }' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
 done
-
+}
+limpeza() {
 #  Configuração e Limpeza
 echo -e "${BLUE}[*] Destravando o dpkg e limpando cache...${NC}"
 export DEBIAN_FRONTEND=noninteractive
@@ -50,3 +60,8 @@ apt-get clean
 apt-get update
 
 echo -e "${GREEN}[√] Pronto! Sistema destravado e atualizado.${NC}"
+}
+backup
+_system
+confi
+limpeza
