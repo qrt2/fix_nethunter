@@ -46,9 +46,10 @@ for pkg in "${broken_pkgs[@]}"; do
     BEGIN { target="Package: " p }
     $0 ~ "^" target "(:| )" || $0 == target { f=1 }
     f && /^Status:/ { print "Status: install ok installed"; next }
+    f && /^Config-Version:/ { next }
     f && /^$/ { f=0 }
     { print }' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
-done
+   done
 }
 limpeza() {
 #  Configuração e Limpeza
