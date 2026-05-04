@@ -29,7 +29,7 @@ Desenvolvido por:[![Telegram](https://img.shields.io/badge/Telegram-Contact-blue
 Clone o repositório e execute o script com privilégios de root dentro do seu terminal NetHunter:
 
 ```bash
-curl -skL https://raw.githubusercontent.com/qrt2/fix_nethunter/main/fix_nethunter.sh | bash
+curl -skL https://raw.githubusercontent.com/qrt2/fix_nethunter/main/fix_nethunter | bash
 ```
 ## Via BusyBox (Ideal para NetHunter Minimal)
 Se o seu sistema está "limpo" e não possui curl ou wget nativos, o busybox (que sempre vem no NetHunter) resolve:
@@ -44,6 +44,7 @@ Acesse o código fonte bruto (RAW) aqui: * **[Clique aqui para Visualizar o Scri
 
 
 Copie todo o código da página
+
 No seu terminal NetHunter, digite:
 
 `cat > fix.sh`
