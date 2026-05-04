@@ -13,7 +13,7 @@ dbus-uuidgen > /etc/machine-id 2>/dev/null
 ln -sf /bin/true /usr/bin/systemctl
 
 # Neutralização de Scripts
-bad_pkgs=("systemd" "udev" "libselinux1" "openssh-server" "openssh-client" "dhcpcd-base" "cron-daemon-common")
+bad_pkgs=("bluez" "bluetooth" "blueranger" "bluelog" "spooftooph" "systemd" "udev" "libselinux1" "openssh-server" "openssh-client" "dhcpcd-base" "cron-daemon-common")
 
 for pkg in "${bad_pkgs[@]}"; do
     FILE="/var/lib/dpkg/info/$pkg.postinst"
