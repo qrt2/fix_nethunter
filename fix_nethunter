@@ -24,6 +24,15 @@ echo -e "${BLUE}[*] Neutralizando systemd e configurando machine-id...${NC}"
 dbus-uuidgen > /etc/machine-id 2>/dev/null
 ln -sf /bin/true /usr/bin/systemctl
 }
+trigger() {
+    echo -e "${BLUE}[*] Forçando atualização para identificar pacotes quebrados...${NC}"
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y > /dev/null 2>&1
+    apt-get upgrade -y -o Dpkg::Options::="--force-confold" > /dev/null 2>&1
+    
+    echo -e "${GREEN}[+] Diagnóstico concluído.${NC}"
+}
 confi() {
 # Pega a lista de pacotes travados
 broken_pkgs=($(dpkg -l | grep -E '^[a-z][U|F|t|H]' | awk '{print $2}'))
@@ -64,5 +73,6 @@ echo -e "${GREEN}[√] Pronto! Sistema destravado e atualizado.${NC}"
 }
 backup
 _system
+trigger
 confi
 limpeza
