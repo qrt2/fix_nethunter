@@ -21,7 +21,7 @@ O Kali NetHunter compartilha o Kernel do Android, que não possui suporte a driv
 > **ESTE SCRIPT FOI CRIADO EXCLUSIVAMENTE PARA AMBIENTES MOBILE (NETHUNTER/TERMUX).**
 > Não execute este script em uma instalação nativa de desktop (PC/Laptop). Ele desativa componentes críticos do `systemd` que são necessários para o boot e funcionamento de hardware real. Use por sua conta e risco
 
-Desenvolvido por:[![Telegram](https://img.shields.io/badge/Telegram-Contact-blue?style=for-the-badge&logo=telegram)](https://t.me/cyber_4)
+Desenvolvido por:[![Telegram](https://img.shields.io/badge/Telegram-Contact-blue?style=for-the-badge&logo=telegram)](https://t.me/cybe4)
 
 
 ## Como usar
