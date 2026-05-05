@@ -26,23 +26,24 @@ dbus-uuidgen > /etc/machine-id 2>/dev/null
 ln -sf /bin/true /usr/bin/systemctl
 }
 trigger() {
-    echo -e "${BLUE}[*] Forçando atualização para identificar pacotes quebrados...${NC}"
+    echo -ne "${BLUE}[*] Iniciando diagnóstico de integridade...${NC}"
     
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -y > /dev/null 2>&1
-    apt-get upgrade -y -o Dpkg::Options::="--force-confold" > /dev/null 2>&1
+    apt-get upgrade -y -o Dpkg::Options::="--force-confold" > /dev/null 2>&1 &
+    
     pid=$!
-    disown $pid
+    disown $pid 2>/dev/null
     spin='/-\|'
-    i=0
-    while kill -0 $pid 2>/dev/null; do
-        i=$(( (i+1) % 4 ))
-        # O printf é mais estável que o echo -ne em alguns shells
-        printf "\r${YELLOW}[${spin:$i:1}] Diagnosticando sistema... aguarde.${NC}"
-        # Usamos apenas 'sleep' sem o caminho completo
+    count=0
+    while kill -0 $pid 2>/dev/null || [ $count -lt 30 ]; do
+        i=$(( (count)%4 ))
+        printf "\r${YELLOW}[${spin:$i:1}] Analisando pacotes e dependências...${NC}"
         sleep 0.1
+        ((count++))
     done
-    echo -e "\n${GREEN}[+] Diagnóstico concluído.${NC}"
+    
+    echo -e "\n${GREEN}[√] Diagnóstico concluído com sucesso!${NC}"
 }
 confi() {
 # Pega a lista de pacotes travados
