@@ -73,16 +73,16 @@ for pkg in "${broken_pkgs[@]}"; do
    done
 }
 limpeza() {
-#  Configuração e Limpeza
-echo -e "${BLUE}[*] Destravando o dpkg e limpando cache...${NC}"
-export DEBIAN_FRONTEND=noninteractive
-dpkg --configure -a --force-confnew
-
-apt-get clean
-apt-get update
-
-echo -e "${GREEN}[√] Pronto! Sistema destravado e atualizado.${NC}"
+    echo -e "${BLUE}[*] Finalizando configuração e limpando lixo...${NC}"
+    dpkg --configure -a --force-confold > /dev/null 2>&1
+    apt-get install -f -y > /dev/null 2>&1
+    apt-get autoremove -y > /dev/null 2>&1
+    apt-get clean
+    echo -e "${GREEN}[√] Tudo limpo e sincronizado!${NC}"
+    echo -e "${BLUE}[*] Sincronizando versões finais...${NC}"
+    apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 }
+
 backup
 _system
 trigger
