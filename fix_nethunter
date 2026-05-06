@@ -47,7 +47,7 @@ trigger() {
 }
 confi() {
 # Pega a lista de pacotes travados
-broken_pkgs=($(dpkg -l | grep -E '^[a-z][U|F|t|H]' | awk '{print $2}'))
+broken_pkgs=($(dpkg -l | grep -E '^[a-z][U|F|t|W|H]' | awk '{print $2}'))
 
 if [ ${#broken_pkgs[@]} -eq 0 ]; then
         echo -e "${YELLOW}[+] Nenhum pacote quebrado encontrado..${NC}"
@@ -63,14 +63,16 @@ for pkg in "${broken_pkgs[@]}"; do
     fi 
 
     echo -e "${GREEN}[+] Aplicando patch via AWK: $pkg${NC}"
-    awk -v p="$pkg" '
-    BEGIN { target="Package: " p }
-    $0 ~ "^" target "(:| )" || $0 == target { f=1 }
-    f && /^Status:/ { print "Status: install ok installed"; next }
-    f && /^Config-Version:/ { next }
-    f && /^$/ { f=0 }
-    { print }' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
-   done
+awk -v p="$pkg" '
+BEGIN { target="Package: " p }
+$0 ~ "^" target "(:| )" || $0 == target { f=1 }
+f && /^Status:/ { print "Status: install ok installed"; next }
+f && /^Config-Version:/ { next }
+f && /^Triggers-Pending:/ { next }
+f && /^Triggers-Awaited:/ { next }
+f && /^$/ { f=0 }
+{ print }' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
+done
 }
 limpeza() {
     echo -e "${BLUE}[*] Finalizando configuração e limpando lixo...${NC}"
