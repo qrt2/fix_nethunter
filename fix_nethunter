@@ -11,7 +11,6 @@ STATUS_FILE="/var/lib/dpkg/status"
 BACKUP_FILE="${STATUS_FILE}.bak"
 
 backup() {
-# Verifica se já existe um backup. Se não existir, cria o primeiro.
 if [ ! -f "$BACKUP_FILE" ]; then
     echo -e "${BLUE}[+] Criando backup inicial do banco de dados dpkg...${NC}"
     cp "$STATUS_FILE" "$BACKUP_FILE"
@@ -20,16 +19,31 @@ else
     cp "$STATUS_FILE" "${STATUS_FILE}.tmp_bak"
 fi
 }
+
+# Limpa erros de parsing globais antes de começar
+limpeza_global() {
+    echo -e "${BLUE}[*] Higienizando banco de dados (correção de gatilhos)...${NC}"
+    awk '
+    /^Status: install ok installed/ { f=1; print; next }
+    f && /^Config-Version:/ { next }
+    f && /^Triggers-Pending:/ { next }
+    f && /^Triggers-Awaited:/ { next }
+    /^$/ { f=0 }
+    { print }' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
+}
+
 _system() {
 echo -e "${BLUE}[*] Neutralizando systemd e configurando machine-id...${NC}"
 dbus-uuidgen > /etc/machine-id 2>/dev/null
 ln -sf /bin/true /usr/bin/systemctl
 }
+
 trigger() {
     echo -ne "${BLUE}[*] Iniciando diagnóstico de integridade...${NC}"
     
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -y > /dev/null 2>&1
+    # Removido o & para que o diagnóstico seja real e linear
     apt-get upgrade -y -o Dpkg::Options::="--force-confold" > /dev/null 2>&1 &
     
     pid=$!
@@ -45,15 +59,17 @@ trigger() {
     
     echo -e "\n${GREEN}[√] Diagnóstico concluído com sucesso!${NC}"
 }
+
 confi() {
-# Pega a lista de pacotes travados
+# Agora o dpkg -l vai funcionar porque a limpeza_global ja rodou antes
 broken_pkgs=($(dpkg -l | grep -E '^[a-z][U|F|t|W|H]' | awk '{print $2}'))
 
 if [ ${#broken_pkgs[@]} -eq 0 ]; then
         echo -e "${YELLOW}[+] Nenhum pacote quebrado encontrado..${NC}"
         return
     fi
-echo -e "${BLUE}[*] Ajustando banco de dados dpkg...${NC}"
+
+echo -e "${BLUE}[*] Ajustando blocos de pacotes específicos...${NC}"
 for pkg in "${broken_pkgs[@]}"; do
     FILE="/var/lib/dpkg/info/$pkg.postinst"
     if [ -f "$FILE" ]; then
@@ -74,6 +90,7 @@ f && /^$/ { f=0 }
 { print }' "$STATUS_FILE" > "${STATUS_FILE}.tmp" && mv "${STATUS_FILE}.tmp" "$STATUS_FILE"
 done
 }
+
 limpeza() {
     echo -e "${BLUE}[*] Finalizando configuração e limpando lixo...${NC}"
     dpkg --configure -a --force-confold > /dev/null 2>&1
@@ -86,6 +103,7 @@ limpeza() {
 }
 
 backup
+limpeza_global
 _system
 trigger
 confi
