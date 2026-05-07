@@ -39,25 +39,31 @@ ln -sf /bin/true /usr/bin/systemctl
 }
 
 trigger() {
-    echo -ne "${BLUE}[*] Iniciando diagnóstico de integridade...${NC}"
+    # Imprime a mensagem inicial sem o \n para o spinner entrar na mesma linha ou logo abaixo
+    echo -e "${BLUE}[*] Iniciando diagnóstico de integridade...${NC}"
     
     export DEBIAN_FRONTEND=noninteractive
-    apt-get update -y > /dev/null 2>&1
-    # Removido o & para que o diagnóstico seja real e linear
-    apt-get upgrade -y -o Dpkg::Options::="--force-confold" > /dev/null 2>&1 &
+    
+    # Agrupamos o update e o upgrade em um subshell () e mandamos para o background &
+    # Assim a animação começa enquanto o APT ainda está baixando as listas
+    ( apt-get update -y > /dev/null 2>&1 && apt-get upgrade -y -o Dpkg::Options::="--force-confold" > /dev/null 2>&1 ) &
     
     pid=$!
     disown $pid 2>/dev/null
     spin='/-\|'
     count=0
+    
+    # O loop começa IMEDIATAMENTE após o comando acima
     while kill -0 $pid 2>/dev/null || [ $count -lt 30 ]; do
         i=$(( (count)%4 ))
+        # Usamos \r para sobrescrever a linha e dar o efeito de movimento
         printf "\r${YELLOW}[${spin:$i:1}] Analisando pacotes e dependências...${NC}"
         sleep 0.1
         ((count++))
     done
     
-    echo -e "\n${GREEN}[√] Diagnóstico concluído com sucesso!${NC}"
+    # Limpa a linha do spinner e mostra o sucesso
+    printf "\r${GREEN}[√] Diagnóstico concluído com sucesso!                               ${NC}\n"
 }
 
 confi() {
